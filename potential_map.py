@@ -9,7 +9,7 @@ def compute_potential(x, y, scale=1.0):
         dy = y - cy
         distance = max(1, (dx**2 + dy**2)**0.5)  # избегаем деления на 0
         total += q / (distance * scale)  # применяем масштаб к расстоянию
-    return total / 100
+    return total
 
 def draw_potential_map(surface, radius_scale=1.0):
     """Рисует цветовую карту потенциала на указанной поверхности с масштабированием радиуса."""
