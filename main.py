@@ -105,7 +105,10 @@ def main():
                 screen.blit(field_lines_surface, (0, 0))
             elif mode == "equipotential" and equipotential_lines_surface:
                 screen.blit(equipotential_lines_surface, (0, 0))
-            elif mode == "focus" and focus_lines_surface:
+            elif mode == "focus":
+                # Для режима фокусировки перерисовываем каждый кадр
+                focus_lines_surface.fill((0, 0, 0, 0))
+                draw_focus_lines(focus_lines_surface)
                 screen.blit(focus_lines_surface, (0, 0))
             elif mode == "potential_map" and potential_map_surface:
                 screen.blit(potential_map_surface, (0, 0))
