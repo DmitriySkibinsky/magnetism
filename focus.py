@@ -6,9 +6,10 @@ from scipy.integrate import odeint
 
 # Глобальные константы
 ELECTRON_RADIUS = 5  # радиус электрона в пикселях
-TRAJECTORY_WIDTH = 2  # ширина траектории в пикселях
-RING_WIDTH = 2       # ширина кольца в пикселях
-RING_LENGTH_SCALE = 3000  # масштаб длины кольца (чем больше, тем длиннее линия)
+TRAJECTORY_WIDTH = 3  # ширина траектории в пикселях
+RING_WIDTH = 2  # ширина кольца в пикселях
+RING_LENGTH_SCALE = 8000  # масштаб длины кольца (чем больше, тем длиннее линия)
+ANIMATION_DURATION = 8000  # продолжительность анимации в мс
 
 # Физические константы
 e = 1.602e-19  # заряд электрона [Кл]
@@ -17,26 +18,51 @@ eps0 = 8.854e-12  # электрическая постоянная [Ф/м]
 
 # Конфигурация колец (теперь z - горизонтальная координата)
 rings = [
-    {'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.0},  # Центральное кольцо
-    {'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.02},  # Правое кольцо
-    {'radius': 0.01, 'charge': 1e-10, 'z_pos': -0.02}  # Левое кольцо
+    {'radius': 0.02, 'charge': 1e-10, 'z_pos': -0.005},  # Левое кольцо
+    {'radius': 0.02, 'charge': 1e-10, 'z_pos': -0.01},  # Левое кольцо
+    {'radius': 0.02, 'charge': 1e-10, 'z_pos': -0.015},  # Левое кольцо
+    {'radius': 0.02, 'charge': 1e-10, 'z_pos': -0.02},  # Левое кольцо
+
+    {'radius': 0.02, 'charge': 1e-10, 'z_pos': 0.0},  # Центральное кольцо
+    {'radius': 0.02, 'charge': 1e-10, 'z_pos': 0.005},  # Центральное кольцо
+    {'radius': 0.02, 'charge': 1e-10, 'z_pos': 0.01},  # Центральное кольцо
+    {'radius': 0.015, 'charge': 1e-10, 'z_pos': 0.02},  # Правое кольцо
+    #{'radius': 0.015, 'charge': 1e-10, 'z_pos': 0.0225},  # Правое кольцо
+    {'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.025},  # Правое кольцо
+    #{'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.0275},  # Правое кольцо
+    {'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.03},  # Правое кольцо
+    #{'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.0325},  # Правое кольцо
+    #{'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.035},  # Правое кольцо
+    {'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.0375},  # Правое кольцо
+    {'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.04},  # Правое кольцо
+    {'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.0425},  # Правое кольцо
+    {'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.045},  # Правое кольцо
+
 ]
 
 # Электроны (начальное положение и скорость)
 electrons = [
-    {'initial_pos': [-0.04, -0.001], 'initial_vel': [2.5e6, 0.5e5]},  # Верхний электрон
-    {'initial_pos': [-0.04, 0.000], 'initial_vel': [2.2e6, 0.5e5]},  # Центральный электрон
-    {'initial_pos': [-0.04, 0.001], 'initial_vel': [2.5e6, 0.5e5]},  # Нижний электрон
-    {'initial_pos': [-0.04, 0.002], 'initial_vel': [2.5e6, 0.5e5]}  # Дополнительный электрон
+    {'initial_pos': [-0.04, -0.007], 'initial_vel': [2.5e6, 0.5e5]},
+    {'initial_pos': [-0.04, -0.003], 'initial_vel': [2.5e6, 0.5e5]},  # Верхний электрон
+    {'initial_pos': [-0.04, 0.0001], 'initial_vel': [2.2e6, 0.5e5]},  # Центральный электрон
+    {'initial_pos': [-0.04, 0.003], 'initial_vel': [2.5e6, 0.5e5]},  # Нижний электрон
+    {'initial_pos': [-0.04, 0.008], 'initial_vel': [2.5e6, 0.5e5]},  # Дополнительный электрон
+    {'initial_pos': [-0.04, 0.012], 'initial_vel': [2.5e6, 0.5e5]}  # Дополнительный электрон
 ]
 
 # Цвета для электронов и их траекторий
 electron_colors = [
+    RED,
     (0, 180, 0),  # зеленый
     (255, 128, 0),  # оранжевый
     (0, 180, 180),  # бирюзовый
-    (180, 0, 180)  # фиолетовый
+    (180, 0, 180),  # фиолетовый
+    LIGHT_GRAY
 ]
+
+# Глобальные переменные для хранения траекторий и времени последнего обновления
+trajectories_data = None
+last_update_time = 0
 
 
 def CEL1(t):
@@ -111,15 +137,17 @@ def electron_motion(y, t, q_rings, R_rings):
 
 def simulate_electrons_trajectories(rings, electrons):
     """Моделирование траекторий электронов через систему колец"""
+    global trajectories_data
+
     t_max = 3e-8  # время симуляции [с]
-    n_steps = 5000  # Увеличили количество шагов для более плавных траекторий
+    n_steps = 5000  # Количество шагов
     t = np.linspace(0, t_max, n_steps)
 
     R_rings = [ring['radius'] for ring in rings]
     q_rings = [ring['charge'] for ring in rings]
-    z_rings = [ring['z_pos'] for ring in rings]
 
     trajectories = []
+    valid_indices = []  # Индексы точек, где траектория движется вперед
 
     for electron in electrons:
         y0 = [
@@ -131,14 +159,33 @@ def simulate_electrons_trajectories(rings, electrons):
 
         sol = odeint(electron_motion, y0, t, args=(q_rings, R_rings))
         trajectory = sol[:, :2]  # Берем только ro и z
-        trajectories.append(trajectory)
 
-    return t, trajectories
+        # Определяем, где траектория начинает идти назад
+        z_values = trajectory[:, 1]  # z-координаты
+        forward_indices = []
+        prev_z = z_values[0]
+        for i, z in enumerate(z_values):
+            if z >= prev_z:  # Движение вперед
+                forward_indices.append(i)
+                prev_z = z
+            else:
+                break  # Прекращаем при движении назад
+
+        trajectories.append(trajectory[:forward_indices[-1] + 1] if forward_indices else trajectory)
+
+    trajectories_data = (t, trajectories)
 
 
 def draw_focus_lines(surface):
     """Рисует траектории электронов и кольца с анимацией движения"""
-    t, trajectories = simulate_electrons_trajectories(rings, electrons)
+    global trajectories_data, last_update_time
+
+    # Инициализация траекторий при первом вызове
+    if trajectories_data is None:
+        simulate_electrons_trajectories(rings, electrons)
+        last_update_time = pygame.time.get_ticks()
+
+    t, trajectories = trajectories_data
 
     # Настройка масштабирования
     visible_width = 0.12  # Видимая область по горизонтали (12 см)
@@ -174,6 +221,14 @@ def draw_focus_lines(surface):
                 surface.blit(text_surface, (x_pos - 15, offset_y + line_length + 5))
 
     # Анимация движения электронов
+    current_time = pygame.time.get_ticks()
+    progress = (current_time - last_update_time) / ANIMATION_DURATION
+
+    # Сброс анимации по завершении цикла
+    if progress >= 1.0:
+        last_update_time = current_time
+        progress = 0.0
+
     for i, trajectory in enumerate(trajectories):
         color = electron_colors[i % len(electron_colors)]
 
@@ -186,25 +241,33 @@ def draw_focus_lines(surface):
             if -50 < x_px < WIDTH + 50 and -50 < y_px < HEIGHT + 50:
                 screen_points.append((x_px, y_px))
 
-        # Рисуем траекторию постепенно
+        # Рисуем траекторию
         if len(screen_points) > 1:
             # Полная траектория (бледная)
             faded_color = (color[0] // 4 + 192, color[1] // 4 + 192, color[2] // 4 + 192)
             pygame.draw.lines(surface, faded_color, False, screen_points, 1)
 
-            # Текущая позиция анимации (используем время для анимации)
-            current_time = pygame.time.get_ticks() % 5000  # 5 секунд на полную анимацию
-            progress = current_time / 5000  # от 0 до 1
-            current_index = int(progress * (len(screen_points) - 1))
+            # Анимированная часть траектории
+            current_index = min(int(progress * len(screen_points)), len(screen_points) - 1)
 
-            # Рисуем часть траектории до текущей точки
-            if current_index > 1:
-                pygame.draw.lines(surface, color, False, screen_points[:current_index+1], TRAJECTORY_WIDTH)
+            # Плавная интерполяция между точками
+            if current_index > 0:
+                partial_progress = (progress * len(screen_points)) % 1.0
+                if current_index < len(screen_points) - 1 and partial_progress > 0:
+                    x1, y1 = screen_points[current_index]
+                    x2, y2 = screen_points[current_index + 1]
+                    current_x = x1 + (x2 - x1) * partial_progress
+                    current_y = y1 + (y2 - y1) * partial_progress
+                    screen_points_interp = screen_points[:current_index + 1] + [(current_x, current_y)]
+                else:
+                    screen_points_interp = screen_points[:current_index + 1]
 
-            # Рисуем "электрон" (кружок) в текущей позиции
-            if current_index < len(screen_points):
-                pygame.draw.circle(surface, color, screen_points[current_index], ELECTRON_RADIUS)
-                pygame.draw.circle(surface, WHITE, screen_points[current_index], ELECTRON_RADIUS-3)
+                pygame.draw.lines(surface, color, False, screen_points_interp, TRAJECTORY_WIDTH)
+
+                # Рисуем "электрон" (кружок) в текущей позиции
+                if screen_points_interp:
+                    pygame.draw.circle(surface, color, screen_points_interp[-1], ELECTRON_RADIUS)
+                    pygame.draw.circle(surface, WHITE, screen_points_interp[-1], ELECTRON_RADIUS - 3)
 
     # Начальные позиции электронов
     for i, electron in enumerate(electrons):
