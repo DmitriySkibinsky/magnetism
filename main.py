@@ -26,6 +26,7 @@ equipotential_lines_surface = None
 focus_lines_surface = None
 potential_map_surface = None
 
+
 def draw_buttons():
     """Рисует кнопки на экране."""
     # Рисуем выпадающее меню
@@ -52,12 +53,14 @@ def draw_buttons():
             text_option = font.render(option, True, WHITE)
             screen.blit(text_option, (option_rect.x + 10, option_rect.y + 5))
 
+
 def build_field_lines():
     """Строит силовые линии один раз и сохраняет на поверхности"""
     global field_lines_surface
     field_lines_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
     field_lines_surface.fill((0, 0, 0, 0))
     draw_field_lines(field_lines_surface)
+
 
 def build_equipotential_lines():
     """Строит эквипотенциальные линии один раз и сохраняет на поверхности"""
@@ -66,6 +69,7 @@ def build_equipotential_lines():
     equipotential_lines_surface.fill((0, 0, 0, 0))
     draw_equipotential_lines(equipotential_lines_surface)
 
+
 def build_focus_lines():
     """Строит линии фокусировки один раз и сохраняет на поверхности"""
     global focus_lines_surface
@@ -73,12 +77,14 @@ def build_focus_lines():
     focus_lines_surface.fill((0, 0, 0, 0))
     draw_focus_lines(focus_lines_surface)
 
+
 def build_potential_map():
     """Строит карту потенциала один раз и сохраняет на поверхности"""
     global potential_map_surface
     potential_map_surface = pygame.Surface((WIDTH, HEIGHT))
     potential_map_surface.fill(WHITE)
     draw_potential_map(potential_map_surface)
+
 
 def reset_simulation():
     """Полностью сбрасывает симуляцию"""
@@ -90,14 +96,12 @@ def reset_simulation():
     focus_lines_surface = None
     potential_map_surface = None
 
+
 def main():
     global draw_lines, mode, dropdown_active, selected_option, charges
     running = True
     while running:
         screen.fill(WHITE)
-
-        # Отображаем кнопки
-        draw_buttons()
 
         # Рисуем сохраненные линии, если нужно
         if draw_lines:
@@ -113,7 +117,12 @@ def main():
             elif mode == "potential_map" and potential_map_surface:
                 screen.blit(potential_map_surface, (0, 0))
 
+        # Рисуем заряды
         draw_charges()
+
+        # Отображаем кнопки поверх всего
+        draw_buttons()
+
         pygame.display.flip()
 
         for event in pygame.event.get():
@@ -153,13 +162,14 @@ def main():
                 # Обработка кликов на кнопку "Сброс"
                 elif button_reset_rect.collidepoint(x, y):
                     reset_simulation()
-                elif y > 130:  # Игнорируем клики выше кнопок
+                elif y > 130 and mode != "focus":  # Игнорируем клики выше кнопок и в режиме фокусировки
                     if event.button == 1:
                         charges.append((x, y, -1))
                     elif event.button == 3:
                         charges.append((x, y, 1))
 
     pygame.quit()
+
 
 if __name__ == "__main__":
     main()

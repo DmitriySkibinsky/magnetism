@@ -5,10 +5,10 @@ import math
 from scipy.integrate import odeint
 
 # Глобальные константы
-ELECTRON_RADIUS = 5  # радиус электрона в пикселях
-TRAJECTORY_WIDTH = 3  # ширина траектории в пикселях
+ELECTRON_RADIUS = 8  # радиус электрона в пикселях
+TRAJECTORY_WIDTH = 4  # ширина траектории в пикселях
 RING_WIDTH = 2  # ширина кольца в пикселях
-RING_LENGTH_SCALE = 8000  # масштаб длины кольца (чем больше, тем длиннее линия)
+RING_LENGTH_SCALE = 10000  # масштаб длины кольца (чем больше, тем длиннее линия)
 ANIMATION_DURATION = 8000  # продолжительность анимации в мс
 
 # Физические константы
@@ -26,28 +26,31 @@ rings = [
     {'radius': 0.02, 'charge': 1e-10, 'z_pos': 0.0},  # Центральное кольцо
     {'radius': 0.02, 'charge': 1e-10, 'z_pos': 0.005},  # Центральное кольцо
     {'radius': 0.02, 'charge': 1e-10, 'z_pos': 0.01},  # Центральное кольцо
-    {'radius': 0.015, 'charge': 1e-10, 'z_pos': 0.02},  # Правое кольцо
-    #{'radius': 0.015, 'charge': 1e-10, 'z_pos': 0.0225},  # Правое кольцо
-    {'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.025},  # Правое кольцо
-    #{'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.0275},  # Правое кольцо
-    {'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.03},  # Правое кольцо
-    #{'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.0325},  # Правое кольцо
-    #{'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.035},  # Правое кольцо
-    {'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.0375},  # Правое кольцо
-    {'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.04},  # Правое кольцо
-    {'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.0425},  # Правое кольцо
-    {'radius': 0.01, 'charge': 1e-10, 'z_pos': 0.045},  # Правое кольцо
+
+
+    {'radius': 0.015, 'charge': 1e-9, 'z_pos': 0.015},  # Правое кольцо
+    {'radius': 0.015, 'charge': 1e-9, 'z_pos': 0.02},  # Правое кольцо
+    {'radius': 0.013, 'charge': 1e-11, 'z_pos': 0.0225},  # Правое кольцо
+    {'radius': 0.013, 'charge': 1e-11, 'z_pos': 0.025},  # Правое кольцо
+    {'radius': 0.013, 'charge': 1e-11, 'z_pos': 0.0275},  # Правое кольцо
+    {'radius': 0.013, 'charge': 1e-11, 'z_pos': 0.03},  # Правое кольцо
+    {'radius': 0.013, 'charge': 1e-11, 'z_pos': 0.0325},  # Правое кольцо
+    {'radius': 0.013, 'charge': 1e-11, 'z_pos': 0.035},  # Правое кольцо
+    {'radius': 0.013, 'charge': 1e-11, 'z_pos': 0.0375},  # Правое кольцо
+    {'radius': 0.013, 'charge': 1e-11, 'z_pos': 0.04},  # Правое кольцо
+    {'radius': 0.013, 'charge': 1e-11, 'z_pos': 0.0425},  # Правое кольцо
+    {'radius': 0.013, 'charge': 1e-11, 'z_pos': 0.045},  # Правое кольцо
 
 ]
 
 # Электроны (начальное положение и скорость)
 electrons = [
-    {'initial_pos': [-0.04, -0.007], 'initial_vel': [2.5e6, 0.5e5]},
-    {'initial_pos': [-0.04, -0.003], 'initial_vel': [2.5e6, 0.5e5]},  # Верхний электрон
-    {'initial_pos': [-0.04, 0.0001], 'initial_vel': [2.2e6, 0.5e5]},  # Центральный электрон
-    {'initial_pos': [-0.04, 0.003], 'initial_vel': [2.5e6, 0.5e5]},  # Нижний электрон
-    {'initial_pos': [-0.04, 0.008], 'initial_vel': [2.5e6, 0.5e5]},  # Дополнительный электрон
-    {'initial_pos': [-0.04, 0.012], 'initial_vel': [2.5e6, 0.5e5]}  # Дополнительный электрон
+    {'initial_pos': [-0.04, -0.007], 'initial_vel': [8.5e6, 2e5]},
+    {'initial_pos': [-0.04, -0.003], 'initial_vel': [8.5e6, 2e5]},  # Верхний электрон
+    {'initial_pos': [-0.04, 0.0001], 'initial_vel': [8.2e6, 2e5]},  # Центральный электрон
+    {'initial_pos': [-0.04, 0.003], 'initial_vel': [8.5e6, 2e5]},  # Нижний электрон
+    {'initial_pos': [-0.04, 0.008], 'initial_vel': [8.5e6, 2e5]},  # Дополнительный электрон
+    {'initial_pos': [-0.04, 0.012], 'initial_vel': [8.5e6, 2e5]}  # Дополнительный электрон
 ]
 
 # Цвета для электронов и их траекторий
@@ -96,7 +99,7 @@ def field_E(q_rings, R_rings, ro, z):
 
         k = 1 / (4 * np.pi * eps0)  # коэффициент из закона Кулона
         t = q * k / np.pi
-        t2 = z ** 2 + (R + ro) ** 2
+        t2 = z ** 2 + (R + ro) ** 2 #квадрат расстояния между точкой, в которой мы вычисляем поле, и точкой на кольце
         kk = 1 - 4 * R * ro / t2
         K = CEL1(kk)
         Ell = CEL2(kk)
@@ -119,13 +122,16 @@ def field_E(q_rings, R_rings, ro, z):
 
 
 def electron_motion(y, t, q_rings, R_rings):
-    """Уравнения движения электрона в поле системы колец"""
     ro, z, v_ro, v_z = y
+
+    # Если достигли фокусировки (например, z > 0.04), фиксируем движение вдоль оси z
+    #if z > 0.04:
+    #    return [0, v_z, 0, 0]  # v_ro = 0, движение только по оси z
 
     E_ro, E_z, _, _ = field_E(q_rings, R_rings, ro, z)
 
     # Сила, действующая на электрон (F = qE)
-    F_ro = -e * E_ro  # минус, т.к. электрон отрицательно заряжен
+    F_ro = -e * E_ro
     F_z = -e * E_z
 
     # Ускорение (a = F/m)
@@ -133,6 +139,7 @@ def electron_motion(y, t, q_rings, R_rings):
     a_z = F_z / m_e
 
     return [v_ro, v_z, a_ro, a_z]
+
 
 
 def simulate_electrons_trajectories(rings, electrons):
@@ -162,10 +169,11 @@ def simulate_electrons_trajectories(rings, electrons):
 
         # Определяем, где траектория начинает идти назад
         z_values = trajectory[:, 1]  # z-координаты
+
         forward_indices = []
         prev_z = z_values[0]
         for i, z in enumerate(z_values):
-            if z >= prev_z:  # Движение вперед
+            if z >= prev_z or i < 10:  # Позволяем небольшие колебания в начале
                 forward_indices.append(i)
                 prev_z = z
             else:
